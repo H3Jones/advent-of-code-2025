@@ -17,14 +17,17 @@ struct Lock {
     // Current position of the lock (0-99)
     dial_position: u32,
     // zero-counter (how many times we've passed 0)
-    zero_counter: u32,
+    zero_passed_counter: u32,
+    // Number of times the dial has landed on 0
+    zero_finished_counter: u32,
 }
 
 impl Lock {
     fn new() -> Self {
         Lock {
             dial_position: 50,
-            zero_counter: 0,
+            zero_passed_counter: 0,
+            zero_finished_counter: 0,
         }
     }
 
@@ -32,6 +35,8 @@ impl Lock {
     fn rotate_one_right(&mut self) {
         if self.dial_position == 99 {
             self.dial_position = 0;
+            // Increment zero_passed_counter when passing 0
+            self.zero_passed_counter += 1;
         } else {
             self.dial_position += 1;
         }
@@ -40,6 +45,10 @@ impl Lock {
     fn rotate_one_left(&mut self) {
         if self.dial_position == 0 {
             self.dial_position = 99;
+        } else if self.dial_position == 1 {
+            self.dial_position = 0;
+            // Increment zero_passed_counter when passing 0
+            self.zero_passed_counter += 1;
         } else {
             self.dial_position -= 1;
         }
@@ -64,10 +73,10 @@ impl Lock {
         );
 
         if self.dial_position == 0 {
-            self.zero_counter += 1;
+            self.zero_finished_counter += 1;
             println!(
-                "Rotation ended on 0, incrementing zero_counter to {}",
-                self.zero_counter
+                "Rotation ended on 0, incrementing counter to {}",
+                self.zero_finished_counter
             );
         }
     }
@@ -107,7 +116,10 @@ fn main() {
     }
 
     println!(
-        "Final dial position: {}, zero counter: {}",
-        lock.dial_position, lock.zero_counter
+        "Final lock state: position {}, zero_passed_counter {}, zero_finished_counter {}, total zero events {}",
+        lock.dial_position,
+        lock.zero_passed_counter,
+        lock.zero_finished_counter,
+        lock.zero_passed_counter + lock.zero_finished_counter
     );
 }
