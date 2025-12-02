@@ -29,7 +29,6 @@ impl IdRange {
             Ok(range_end) => range_end,
         };
 
-
         IdRange::new(range_start, range_end)
     }
 
@@ -63,6 +62,24 @@ fn has_repeated_digits(id: String) -> bool {
 
     //check for equality
     first_half == second_half
+}
+
+fn has_repeated_advanced(id: String) -> bool {
+    let chars: Vec<char> = id.chars().collect();
+    let len = chars.len();
+
+    let mut str_fragment = String::new();
+
+    for i in 0..len - 1 {
+        str_fragment.push(chars[i]);
+        let fract = len / (i + 1);
+        // if fragment repeated fract times equals id
+        let repeated_fragment = str_fragment.repeat(fract);
+        if repeated_fragment == id {
+            return true;
+        }
+    }
+    false
 }
 
 fn main() {
@@ -121,5 +138,15 @@ mod tests {
         let mut id_range = IdRange::new(95, 115);
         id_range.find_invalid_ids();
         assert_eq!(id_range.invalid_ids, vec![99]);
+    }
+
+    #[test]
+    fn test_has_repeated_advanced() {
+        assert_eq!(has_repeated_advanced("1212".to_string()), true);
+        assert_eq!(has_repeated_advanced("123123".to_string()), true);
+        assert_eq!(has_repeated_advanced("111".to_string()), true);
+        assert_eq!(has_repeated_advanced("1234".to_string()), false);
+        assert_eq!(has_repeated_advanced("12341234".to_string()), true);
+         assert_eq!(has_repeated_advanced("123123123123123".to_string()), true);
     }
 }
