@@ -1,11 +1,11 @@
 struct IdRange {
-    start: u32,
-    end: u32,
-    invalid_ids: Vec<u32>,
+    start: u128,
+    end: u128,
+    invalid_ids: Vec<u128>,
 }
 
 impl IdRange {
-    fn new(start: u32, end: u32) -> Self {
+    fn new(start: u128, end: u128) -> Self {
         IdRange {
             start,
             end,
@@ -15,12 +15,25 @@ impl IdRange {
 
     fn from_str(range_str: &str) -> Self {
         let parts: Vec<&str> = range_str.split('-').collect();
-        let start = parts[0].parse::<u32>().expect("Invalid start range");
-        let end = parts[1].parse::<u32>().expect("Invalid end range");
-        IdRange::new(start, end)
+        let start = parts[0].parse::<u128>();
+
+        let range_start = match start {
+            Err(range_start) => panic!("Invalid start range: {}", range_start),
+            Ok(range_start) => range_start,
+        };
+
+        let end = parts[1].parse::<u128>();
+
+        let range_end = match end {
+            Err(range_end) => panic!("Invalid end range: {}", range_end),
+            Ok(range_end) => range_end,
+        };
+
+
+        IdRange::new(range_start, range_end)
     }
 
-    fn is_invalid(&self, id: u32) -> bool {
+    fn is_invalid(&self, id: u128) -> bool {
         let string_id = id.to_string();
         // check length of id
         let string_len = string_id.len();
@@ -53,7 +66,24 @@ fn has_repeated_digits(id: String) -> bool {
 }
 
 fn main() {
-    println!("Hello, world!");
+    let input_path = "./input.txt";
+    let input = std::fs::read_to_string(input_path).expect("Failed to read input file");
+
+    // split input on commas
+    let parts: Vec<&str> = input.trim().split(',').collect();
+    let mut ranges = Vec::<IdRange>::new();
+    let mut invalid_ids: Vec<u128> = Vec::new();
+
+    for part in parts {
+        println!("Processing range: {}", part);
+        let mut range = IdRange::from_str(part);
+        range.find_invalid_ids();
+        invalid_ids.extend(range.invalid_ids.clone());
+
+        ranges.push(range);
+    }
+
+    println!("Invalid IDs found: {:?}", invalid_ids);
 }
 
 #[cfg(test)]
