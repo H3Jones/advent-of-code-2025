@@ -13,6 +13,13 @@ impl IdRange {
         }
     }
 
+    fn from_str(range_str: &str) -> Self {
+        let parts: Vec<&str> = range_str.split('-').collect();
+        let start = parts[0].parse::<u32>().expect("Invalid start range");
+        let end = parts[1].parse::<u32>().expect("Invalid end range");
+        IdRange::new(start, end)
+    }
+
     fn is_invalid(&self, id: u32) -> bool {
         let string_id = id.to_string();
         // check length of id
@@ -67,5 +74,19 @@ mod tests {
         assert_eq!(id_range.is_invalid(1234), false);
         assert_eq!(id_range.is_invalid(1111), true);
         assert_eq!(id_range.is_invalid(12345), false);
+    }
+
+    #[test]
+    fn test_from_str() {
+        let id_range = IdRange::from_str("100-200");
+        assert_eq!(id_range.start, 100);
+        assert_eq!(id_range.end, 200);
+    }
+
+    #[test]
+    fn test_find_invalid_ids() {
+        let mut id_range = IdRange::new(95, 115);
+        id_range.find_invalid_ids();
+        assert_eq!(id_range.invalid_ids, vec![99]);
     }
 }
