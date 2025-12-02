@@ -83,7 +83,10 @@ fn main() {
         ranges.push(range);
     }
 
-    println!("Invalid IDs found: {:?}", invalid_ids);
+    //println!("Invalid IDs found: {:?}", invalid_ids);
+
+    let invalid_id_sum = invalid_ids.iter().sum::<u128>();
+    println!("Sum of invalid IDs: {}", invalid_id_sum);
 }
 
 #[cfg(test)]
