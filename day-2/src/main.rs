@@ -32,7 +32,7 @@ impl IdRange {
         IdRange::new(range_start, range_end)
     }
 
-    fn is_invalid(&self, id: u128) -> bool {
+    fn is_invalid_simple(&self, id: u128) -> bool {
         let string_id = id.to_string();
         // check length of id
         let string_len = string_id.len();
@@ -41,6 +41,20 @@ impl IdRange {
             return has_repeated_digits(string_id);
         } else {
             return false;
+        }
+    }
+
+    fn is_invalid_advanced(&self, id: u128) -> bool {
+        let string_id = id.to_string();
+        
+        has_repeated_advanced(string_id)
+    }
+
+    fn is_invalid(&self, id: u128) -> bool {
+        if USE_ADVANCED {
+            self.is_invalid_advanced(id)
+        } else {
+            self.is_invalid_simple(id)
         }
     }
 
@@ -53,6 +67,7 @@ impl IdRange {
     }
 }
 
+// check if the first half of the string equals the second half
 fn has_repeated_digits(id: String) -> bool {
     // split string in half
     let len = id.len();
@@ -81,6 +96,9 @@ fn has_repeated_advanced(id: String) -> bool {
     }
     false
 }
+
+// Toggle advanced mode for part 2
+const USE_ADVANCED: bool = true;
 
 fn main() {
     let input_path = "./input.txt";
