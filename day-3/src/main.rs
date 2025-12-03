@@ -1,6 +1,6 @@
 struct BatteryBank {
     batteries: Vec<u32>,
-    max_joltage: u32,
+    max_joltage: u128,
 }
 
 impl BatteryBank {
@@ -23,7 +23,7 @@ impl BatteryBank {
     }
 
     fn calculate_max_joltage(&mut self) {
-        self.max_joltage = find_max_digits(&self.batteries);
+        self.max_joltage = find_max_n_digits(&self.batteries, 12);
     }
 }
 
@@ -72,6 +72,35 @@ fn find_max_digits(digits: &Vec<u32>) -> u32 {
     first_max * 10 + second_max
 }
 
+fn find_max_n_digits(digits: &Vec<u32>, n: usize) -> u128 {
+    let mut selected_digits: Vec<u32> = Vec::new();
+    let mut start_index = 0;
+
+    for remaining in (1..=n).rev() {
+        let end_index = digits.len() - remaining + 1;
+        let mut max_digit = 0;
+        let mut max_index = start_index;
+
+        for i in start_index..end_index {
+            if digits[i] > max_digit {
+                max_digit = digits[i];
+                max_index = i;
+            }
+            if max_digit == 9 {
+                break;
+            }
+        }
+
+        selected_digits.push(max_digit);
+        start_index = max_index + 1;
+    }
+
+    selected_digits
+        .iter()
+        .fold(0, |acc, &digit | acc * 10 + digit as u128)
+}
+
+
 fn main() {
     let input_path = "./input.txt";
     let input = std::fs::read_to_string(input_path).expect("Failed to read input file");
@@ -89,7 +118,7 @@ fn main() {
     }
 
     //total sum of max joltages
-    let total_max_joltage: u32 = banks.iter().map(|bank| bank.max_joltage).sum();
+    let total_max_joltage: u128 = banks.iter().map(|bank| bank.max_joltage).sum();
     println!("Total Max Joltage: {}", total_max_joltage);
 }
 
@@ -124,5 +153,16 @@ mod tests {
         let digits3 = vec![8, 1, 8, 1, 8, 1, 9, 1, 1, 1, 1, 2, 1, 1, 1];
         let result3 = find_max_digits(&digits3);
         assert_eq!(result3, 92);
+    }
+
+    #[test]
+    fn test_find_max_n_digits() {
+        let digits = vec![1, 3, 5, 7, 9];
+        let result = find_max_n_digits(&digits, 3);
+        assert_eq!(result, 579);
+
+        let digits = vec![1, 3, 5, 7, 9, 2, 4, 6, 8, 0];
+        let result = find_max_n_digits(&digits, 3);
+        assert_eq!(result, 980);
     }
 }
