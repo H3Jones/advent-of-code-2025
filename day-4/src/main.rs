@@ -1,4 +1,4 @@
-use std::{char, collections::VecDeque, fmt, path::Display};
+use std::{char, collections::VecDeque};
 
 fn main() {
     let input_path = "./input_short.txt";
@@ -18,8 +18,16 @@ fn main() {
         println!("Line {}: {:?}", i + 1, output[i]);
     }
 
-    let round1 = perform_processing(output);
-    println!("{:?}", round1.output)
+    let mut value = perform_processing(output);
+    let mut iterations = 0;
+    while value.items_removed > 0 {
+        value = perform_processing(value.output).replace_xs_with_dots();
+        iterations += 1;
+        println!(
+            "After iteration {}: {} items removed",
+            iterations, value.items_removed
+        );
+    }
 }
 
 struct ProcessedOutput {
@@ -27,8 +35,20 @@ struct ProcessedOutput {
     items_removed: usize,
 }
 
+impl ProcessedOutput {
+    fn replace_xs_with_dots(mut self) -> Self {
+        for row in self.output.iter_mut() {
+            for c in row.iter_mut() {
+                if *c == 'X' {
+                    *c = '.';
+                }
+            }
+        }
+        self
+    }
+}
 
-fn perform_processing(input: Vec<Vec<char>>) ->ProcessedOutput {
+fn perform_processing(input: Vec<Vec<char>>) -> ProcessedOutput {
     //three buffers
     let mut line_above_buffer: Vec<char> = Vec::new();
     //minus one
@@ -59,12 +79,17 @@ fn perform_processing(input: Vec<Vec<char>>) ->ProcessedOutput {
         //     "Above: {:?}\nCurrent: {:?}\nBelow: {:?}\n",
         //     line_above_buffer, current_line_buffer, next_line_buffer
         // );
-        let processed = process_line(&line_above_buffer, &current_line_buffer, &next_line_buffer);        
+        let processed = process_line(&line_above_buffer, &current_line_buffer, &next_line_buffer);
 
         //count X in processed line
         let line_x_count = processed.iter().filter(|&&c| c == 'X').count();
 
-        println!("Processed Line {}: {:?} found {} X", row + 1, processed, line_x_count);
+        println!(
+            "Processed Line {}: {:?} found {} X",
+            row + 1,
+            processed,
+            line_x_count
+        );
         output.push(processed);
 
         x_count += line_x_count;
@@ -144,7 +169,6 @@ fn get_column(above: &Vec<char>, current: &Vec<char>, below: &Vec<char>, col: us
 struct Window {
     deque: VecDeque<Column>,
 }
-
 
 impl Window {
     fn new() -> Self {
