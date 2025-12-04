@@ -1,4 +1,4 @@
-use std::{char, collections::VecDeque};
+use std::{char, collections::VecDeque, fmt, path::Display};
 
 fn main() {
     let input_path = "./input_short.txt";
@@ -54,7 +54,7 @@ fn process_line(above: &Vec<char>, current: &Vec<char>, below: &Vec<char>) -> Ve
     let max_surrounding = 3; //max number of surrounding cells containing paper
 
     let mut window = Window::new();
-    window.init(&'.');    
+    window.init(&'.');
 
     for col in 0..max_len {
         // if first col special case we need to init the window
@@ -62,40 +62,63 @@ fn process_line(above: &Vec<char>, current: &Vec<char>, below: &Vec<char>) -> Ve
             let column = get_column(above, current, below, col);
             window.add_column(column);
         }
-        
-        //push in the next column
 
-        result_line[col] = 'X'; //placeholder
+        //push in the next column to the right
+        if col + 1 < max_len {
+            let next_column = get_column(above, current, below, col + 1);
+            window.add_column(next_column);
+        } else {
+            //push in empty column if we are at the edge
+            window.add_column(Column {
+                top: '.',
+                middle: '.',
+                bottom: '.',
+            });
+        }
+
+        //println!("Window at col {}: {:?}", col, window.deque);
+
+        if window.get_middle_value() == '.' {
+            //current cell is empty, skip
+            continue;
+        }
+
+        let occupied_count = window.count_occupied();
+
+        if occupied_count <= max_surrounding {
+            result_line[col] = 'X';
+        }
     }
     result_line
 }
 
+#[derive(Debug)]
 struct Column {
     top: char,
     middle: char,
     bottom: char,
 }
 
-fn get_column(
-    above: &Vec<char>,
-    current: &Vec<char>,
-    below: &Vec<char>,
-    col: usize,
-) -> Column {
+fn get_column(above: &Vec<char>, current: &Vec<char>, below: &Vec<char>, col: usize) -> Column {
     let top = if !above.is_empty() { above[col] } else { '.' };
     let middle = current[col];
     let bottom = if !below.is_empty() { below[col] } else { '.' };
-    Column { top, middle, bottom }
+    Column {
+        top,
+        middle,
+        bottom,
+    }
 }
 
 struct Window {
     deque: VecDeque<Column>,
 }
 
+
 impl Window {
     fn new() -> Self {
         Self {
-            deque: VecDeque::with_capacity(3)
+            deque: VecDeque::with_capacity(3),
         }
     }
 
@@ -106,6 +129,14 @@ impl Window {
                 middle: *char,
                 bottom: *char,
             });
+        }
+    }
+
+    fn get_middle_value(&self) -> char {
+        if let Some(middle_column) = self.deque.get(1) {
+            middle_column.middle
+        } else {
+            '.'
         }
     }
 
@@ -151,9 +182,21 @@ mod tests {
     #[test]
     fn test_window_count() {
         let mut window = Window::new();
-        window.add_column(Column { top: 'A', middle: 'B', bottom: '.' });
-        window.add_column(Column { top: 'B', middle: 'C', bottom: 'D' });
-        window.add_column(Column { top: '.', middle: '.', bottom: 'E' });
+        window.add_column(Column {
+            top: 'A',
+            middle: 'B',
+            bottom: '.',
+        });
+        window.add_column(Column {
+            top: 'B',
+            middle: 'C',
+            bottom: 'D',
+        });
+        window.add_column(Column {
+            top: '.',
+            middle: '.',
+            bottom: 'E',
+        });
         assert_eq!(window.count_occupied(), 5);
     }
 }
