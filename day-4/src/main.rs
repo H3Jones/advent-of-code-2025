@@ -1,7 +1,7 @@
 use std::{char, collections::VecDeque, fmt, path::Display};
 
 fn main() {
-    let input_path = "./input_short.txt";
+    let input_path = "./input.txt";
     let input = std::fs::read_to_string(input_path).expect("Failed to read input file");
 
     let output: Vec<Vec<char>> = input
@@ -23,6 +23,8 @@ fn main() {
     let mut current_line_buffer: Vec<char> = Vec::new(); //row of interest
     let mut next_line_buffer: Vec<char> = Vec::new(); //plus one
 
+    let mut x_count = 0;
+
     for row in 0..output.len() {
         //first row special case
         line_above_buffer = if row > 0 {
@@ -42,9 +44,17 @@ fn main() {
         //     "Above: {:?}\nCurrent: {:?}\nBelow: {:?}\n",
         //     line_above_buffer, current_line_buffer, next_line_buffer
         // );
-        let processed = process_line(&line_above_buffer, &current_line_buffer, &next_line_buffer);
-        println!("Processed Line {}: {:?}", row + 1, processed);
+        let processed = process_line(&line_above_buffer, &current_line_buffer, &next_line_buffer);        
+
+        //count X in processed line
+        let line_x_count = processed.iter().filter(|&&c| c == 'X').count();
+
+        println!("Processed Line {}: {:?} found {} X", row + 1, processed, line_x_count);
+
+        x_count += line_x_count;
     }
+
+    println!("Total X found: {}", x_count);
 }
 
 fn process_line(above: &Vec<char>, current: &Vec<char>, below: &Vec<char>) -> Vec<char> {
