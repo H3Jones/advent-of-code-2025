@@ -18,8 +18,14 @@ fn main() {
         println!("Line {}: {:?}", i + 1, output[i]);
     }
 
+    
+
     let mut value = perform_processing(output);
+
+    let mut total_removed = 0;
+
     let mut iterations = 0;
+
     while value.items_removed > 0 {
         value = perform_processing(value.output).replace_xs_with_dots();
         iterations += 1;
@@ -27,7 +33,9 @@ fn main() {
             "After iteration {}: {} items removed",
             iterations, value.items_removed
         );
+        total_removed += value.items_removed;
     }
+    println!("Total items removed after {} iterations: {}", iterations, total_removed);
 }
 
 struct ProcessedOutput {
