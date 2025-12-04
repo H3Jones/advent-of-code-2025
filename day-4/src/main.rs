@@ -1,7 +1,7 @@
 use std::{char, collections::VecDeque, fmt, path::Display};
 
 fn main() {
-    let input_path = "./input.txt";
+    let input_path = "./input_short.txt";
     let input = std::fs::read_to_string(input_path).expect("Failed to read input file");
 
     let output: Vec<Vec<char>> = input
@@ -18,24 +18,39 @@ fn main() {
         println!("Line {}: {:?}", i + 1, output[i]);
     }
 
-    //three buffers
-    let mut line_above_buffer: Vec<char> = Vec::new(); //minus one
-    let mut current_line_buffer: Vec<char> = Vec::new(); //row of interest
-    let mut next_line_buffer: Vec<char> = Vec::new(); //plus one
+    let round1 = perform_processing(output);
+    println!("{:?}", round1.output)
+}
 
+struct ProcessedOutput {
+    output: Vec<Vec<char>>,
+    items_removed: usize,
+}
+
+
+fn perform_processing(input: Vec<Vec<char>>) ->ProcessedOutput {
+    //three buffers
+    let mut line_above_buffer: Vec<char> = Vec::new();
+    //minus one
+    let mut current_line_buffer: Vec<char> = Vec::new();
+    //row of interest
+    let mut next_line_buffer: Vec<char> = Vec::new();
+    //plus one
+
+    let mut output: Vec<Vec<char>> = Vec::new();
     let mut x_count = 0;
 
-    for row in 0..output.len() {
+    for row in 0..input.len() {
         //first row special case
         line_above_buffer = if row > 0 {
             current_line_buffer.clone()
         } else {
             Vec::new()
         };
-        current_line_buffer = output[row].clone();
+        current_line_buffer = input[row].clone();
         //last row special case
-        next_line_buffer = if row + 1 < output.len() {
-            output[row + 1].clone()
+        next_line_buffer = if row + 1 < input.len() {
+            input[row + 1].clone()
         } else {
             Vec::new()
         };
@@ -50,11 +65,17 @@ fn main() {
         let line_x_count = processed.iter().filter(|&&c| c == 'X').count();
 
         println!("Processed Line {}: {:?} found {} X", row + 1, processed, line_x_count);
+        output.push(processed);
 
         x_count += line_x_count;
     }
 
     println!("Total X found: {}", x_count);
+
+    ProcessedOutput {
+        output: output,
+        items_removed: x_count,
+    }
 }
 
 fn process_line(above: &Vec<char>, current: &Vec<char>, below: &Vec<char>) -> Vec<char> {
