@@ -1,7 +1,7 @@
 use std::{char, collections::VecDeque};
 
 fn main() {
-    let input_path = "./input_short.txt";
+    let input_path = "./input.txt";
     let input = std::fs::read_to_string(input_path).expect("Failed to read input file");
 
     let output: Vec<Vec<char>> = input
