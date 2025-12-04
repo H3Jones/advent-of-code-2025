@@ -18,8 +18,6 @@ fn main() {
         println!("Line {}: {:?}", i + 1, output[i]);
     }
 
-    
-
     let mut value = perform_processing(output);
 
     let mut total_removed = 0;
@@ -35,7 +33,10 @@ fn main() {
         );
         total_removed += value.items_removed;
     }
-    println!("Total items removed after {} iterations: {}", iterations, total_removed);
+    println!(
+        "Total items removed after {} iterations: {}",
+        iterations, total_removed
+    );
 }
 
 struct ProcessedOutput {
@@ -58,11 +59,11 @@ impl ProcessedOutput {
 
 fn perform_processing(input: Vec<Vec<char>>) -> ProcessedOutput {
     //three buffers
-    let mut line_above_buffer: Vec<char> = Vec::new();
+    let mut line_above_buffer: Vec<char>;
     //minus one
     let mut current_line_buffer: Vec<char> = Vec::new();
     //row of interest
-    let mut next_line_buffer: Vec<char> = Vec::new();
+    let mut next_line_buffer: Vec<char>;
     //plus one
 
     let mut output: Vec<Vec<char>> = Vec::new();
