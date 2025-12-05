@@ -37,7 +37,7 @@ impl IdRange {
     }
 }
 
-fn merge_ranges(ranges: &mut Vec<IdRange>) -> Vec<IdRange> {
+fn merge_ranges(ranges: &mut[IdRange]) -> Vec<IdRange> {
     if ranges.is_empty() {
         return Vec::new();
     }
@@ -68,8 +68,6 @@ fn merge_ranges(ranges: &mut Vec<IdRange>) -> Vec<IdRange> {
 fn main() {
     let input_path = "./input.txt";
     let input = std::fs::read_to_string(input_path).expect("Failed to read input file");
-   
-    let mut invalid_ids: Vec<u64> = Vec::new();
 
     let mut ranges: Vec<IdRange> = Vec::new();
     let mut ids: Vec<u64> = Vec::new();
@@ -80,7 +78,7 @@ fn main() {
                 let range = IdRange::from_str(line);
                 ranges.push(range);
             }
-            empty_val if empty_val.is_empty() => continue,
+            "" => continue,
             _ => {
                 let id = line.parse::<u64>();
                 match id {
