@@ -1,3 +1,4 @@
+#[derive(Clone, Debug, PartialEq, Eq)]
 struct IdRange {
     start: u64,
     end: u64,
@@ -30,6 +31,38 @@ impl IdRange {
 
         IdRange::new(range_start, range_end)
     }
+
+    fn number_ids_in_range(&self) -> u64 {
+        self.end - self.start + 1
+    }
+}
+
+fn merge_ranges(ranges: &mut Vec<IdRange>) -> Vec<IdRange> {
+    if ranges.is_empty() {
+        return Vec::new();
+    }
+
+    // Sort ranges by start value
+    ranges.sort_by_key(|r| r.start);
+
+    let mut merged_ranges: Vec<IdRange> = Vec::new();
+    let mut current_range = ranges[0].clone();
+
+    for range in ranges.iter().skip(1) {
+        if range.start <= current_range.end + 1 {
+            // Ranges overlap so merge them
+            current_range.end = current_range.end.max(range.end);
+        } else {
+            // No overlap, add the current range to the list and start a new one
+            merged_ranges.push(current_range);
+            current_range = range.clone();
+        }
+    }
+
+    // Add the last range
+    merged_ranges.push(current_range);
+
+    merged_ranges
 }
 
 fn main() {
@@ -60,17 +93,22 @@ fn main() {
 
     println!("Loaded {} ranges", ranges.len());
 
-    println!("Ranges:");
+    // merge overlapping ranges
+    ranges = merge_ranges(&mut ranges);
+
+    println!("Merged to {} ranges", ranges.len());
 
     println!("Loaded {} IDs", ids.len());
 
+    let mut total_ids_in_ranges: u128 = 0;
 
     let mut invalid_ids = ids.clone();
-    for range in ranges.iter() {
-        
+    for range in ranges.iter() {        
         // remove any ids that are in range
         invalid_ids.retain(|&id| !range.is_in_range(id));
         println!("Filtering IDs for range {}-{}: items remaining: {}", range.start, range.end, invalid_ids.len());
+
+        total_ids_in_ranges += range.number_ids_in_range() as u128;
     }
 
     println!("Found {} invalid IDs:", invalid_ids.len());
@@ -79,6 +117,8 @@ fn main() {
 
     println!("Found {} valid IDs:", ids.len() - invalid_ids.len());
 
+    println!("Total IDs in ranges: {}", total_ids_in_ranges);
+    
     
 }
 
@@ -99,5 +139,28 @@ mod tests {
         assert_eq!(id_range.is_in_range(100), true);
         assert_eq!(id_range.is_in_range(99), false);
         assert_eq!(id_range.is_in_range(101), false);
+    }
+    #[test]
+    fn test_number_ids_in_range() {
+        let id_range = IdRange::new(100, 200);
+        assert_eq!(id_range.number_ids_in_range(), 101);
+        let single_value_range = IdRange::new(100, 100);
+        assert_eq!(single_value_range.number_ids_in_range(), 1);
+    }
+    #[test]
+    fn test_merge_ranges() {
+        let mut ranges = vec![
+            IdRange::new(100, 200),
+            IdRange::new(150, 250),
+            IdRange::new(300, 400),
+            IdRange::new(350, 450),
+        ];
+        let merged = merge_ranges(&mut ranges);
+        assert_eq!(merged.len(), 2);
+        let expected = vec![
+            IdRange::new(100, 250),
+            IdRange::new(300, 450),
+        ];
+        assert_eq!(merged, expected);
     }
 }
