@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 enum Operator {
     Add,
     Multiply,
@@ -70,6 +70,29 @@ fn main() {
 
     println!("Values line lengths: {:?}", len_values);
     println!("Operators line count: {:?}", len_operators);
+
+    let operators = &operators_vec[0];
+
+    // Create calculations vec
+    let mut calculations: Vec<Calculation> = Vec::new();
+    let mut answers: Vec<u32> = Vec::new();
+    for (i, operator) in operators.iter().enumerate() {
+        let mut values_for_calc: Vec<u32> = Vec::new();
+        for values_line in &values_vec {
+            if i < values_line.len() {
+                values_for_calc.push(values_line[i]);
+            } else {
+                panic!("Mismatch in values line length for operator index {}", i);
+            }
+        }
+        let calc = Calculation::new(values_for_calc, operator.clone());
+        answers.push(calc.calculate());
+        calculations.push(calc);
+    }
+
+    //sum answers
+    let total_answer: u32 = answers.iter().sum();
+    println!("Total answer from calculations: {}", total_answer);
 
 }
 
