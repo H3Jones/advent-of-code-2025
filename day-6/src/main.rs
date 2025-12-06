@@ -26,6 +26,14 @@ impl Calculation {
     fn new(values: Vec<u32>, operator: Operator) -> Self {
         Calculation { values, operator }
     }
+
+    fn calculate(&self) -> u32 {
+        match self.operator {
+            Operator::Add => self.values.iter().sum(),
+            Operator::Multiply => self.values.iter().product(),
+            Operator::NotSet => panic!("Operator not set for calculation"),
+        }
+    }
 }
 
 fn main() {
@@ -55,6 +63,14 @@ fn main() {
         "Found {} values lines and {} operators lines",
         values_line_count, operators_line_count
     );
+
+    //check all lines have same length
+    let len_operators: Vec<usize> = lengths(&operators_vec);
+    let len_values: Vec<usize> = lengths(&values_vec);
+
+    println!("Values line lengths: {:?}", len_values);
+    println!("Operators line count: {:?}", len_operators);
+
 }
 
 fn process_values_line(line: &str) -> Vec<u32> {
@@ -76,6 +92,10 @@ fn process_operator_line(line: &str) -> Vec<Operator> {
         .collect()
 }
 
+fn lengths<T>(vec: &Vec<Vec<T>>) -> Vec<usize> {
+    vec.iter().map(|v| v.len()).collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -92,5 +112,14 @@ mod tests {
         assert_eq!(operators.len(), 3);
         let expected = vec![Operator::Add, Operator::Multiply, Operator::Add];
         assert_eq!(operators, expected);
+    }
+    #[test]
+    fn test_calculation_add() {
+        let calc = Calculation::new(vec![1, 2, 3, 4], Operator::Add);
+        let result = calc.calculate();
+        assert_eq!(result, 10);
+        let calc_mul = Calculation::new(vec![1, 2, 3, 4], Operator::Multiply);
+        let result_mul = calc_mul.calculate();
+        assert_eq!(result_mul, 24);
     }
 }
