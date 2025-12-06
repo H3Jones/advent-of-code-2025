@@ -27,17 +27,17 @@ impl Calculation {
         Calculation { values, operator }
     }
 
-    fn calculate(&self) -> u32 {
+    fn calculate(&self) -> u128 {
         match self.operator {
-            Operator::Add => self.values.iter().sum(),
-            Operator::Multiply => self.values.iter().product(),
+            Operator::Add => self.values.iter().map(|&v| v as u128).sum(),
+            Operator::Multiply => self.values.iter().map(|&v| v as u128).product(),
             Operator::NotSet => panic!("Operator not set for calculation"),
         }
     }
 }
 
 fn main() {
-    let input_path = "./input_short.txt";
+    let input_path = "./input.txt";
     let input = std::fs::read_to_string(input_path).expect("Failed to read input file");
 
     let mut values_vec: Vec<Vec<u32>> = Vec::new();
@@ -49,12 +49,12 @@ fn main() {
         // if lines contains values
         if !line.contains('+') && !line.contains('*') {
             let values = process_values_line(line);
-            println!("Processed values line: {:?}", values);
+            //println!("Processed values line: {:?}", values);
             values_vec.push(values);
             values_line_count += 1;
         } else {
             let operators = process_operator_line(line);
-            println!("Processed operators line: {:?}", &operators);
+            //println!("Processed operators line: {:?}", &operators);
             operators_vec.push(operators);
             operators_line_count += 1;
         }
@@ -75,7 +75,7 @@ fn main() {
 
     // Create calculations vec
     let mut calculations: Vec<Calculation> = Vec::new();
-    let mut answers: Vec<u32> = Vec::new();
+    let mut answers: Vec<u128> = Vec::new();
     for (i, operator) in operators.iter().enumerate() {
         let mut values_for_calc: Vec<u32> = Vec::new();
         for values_line in &values_vec {
@@ -91,7 +91,7 @@ fn main() {
     }
 
     //sum answers
-    let total_answer: u32 = answers.iter().sum();
+    let total_answer: u128 = answers.iter().sum();
     println!("Total answer from calculations: {}", total_answer);
 
 }
