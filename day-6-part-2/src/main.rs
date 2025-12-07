@@ -39,19 +39,19 @@ fn main() {
     let input_path = "./input.txt";
     let input = std::fs::read_to_string(input_path).expect("Failed to read input file");
 
-    let mut values_vec: Vec<&str> = Vec::new();
-    let mut operators_vec: Vec<&str> = Vec::new();
+    let mut values_vec: Vec<String> = Vec::new();
+    let mut operators_vec: Vec<String> = Vec::new();
     let mut values_line_count = 0;
     let mut operators_line_count = 0;
 
     for line in input.lines() {
-        println!("{line}");
+        //println!("{line}");
         // if lines contains values
         if !line.contains('+') && !line.contains('*') {
-            values_vec.push(line);
+            values_vec.push(line.to_string());
             values_line_count += 1;
         } else {
-            operators_vec.push(line);
+            operators_vec.push(line.to_string());
             operators_line_count += 1;
         }
     }
@@ -61,16 +61,16 @@ fn main() {
         values_line_count, operators_line_count
     );
 
-    let col_indices = get_col_indices(operators_vec[0]);
-    println!("Indices: {:?}", col_indices);
+    let col_indices = get_col_indices(&operators_vec[0]);
+    //println!("Indices: {:?}", col_indices);
 
     let processed = process_colwise(
-        values_vec.iter().map(|s| s.to_string()).collect(),
-        operators_vec[0].to_string(),
+        values_vec,
+        operators_vec[0].clone(),
         col_indices,
     );
 
-    println!("processed {:?}", processed);
+    //println!("processed {:?}", processed);
 
     let mut answers: Vec<u128> = Vec::new();
     for calc in processed.iter() {
@@ -158,15 +158,6 @@ fn collapse_to_number(digits: Vec<char>) -> Option<u32> {
     digit_string.parse::<u32>().ok()
 }
 
-fn process_values_line(line: &str) -> Vec<u32> {
-    line.split_whitespace()
-        .map(|s| {
-            s.trim()
-                .parse::<u32>()
-                .expect("Invalid number in values line")
-        })
-        .collect()
-}
 
 fn process_operator_line(line: &str) -> Vec<Operator> {
     line.split_whitespace()
@@ -177,13 +168,9 @@ fn process_operator_line(line: &str) -> Vec<Operator> {
         .collect()
 }
 
-fn lengths<T>(vec: &Vec<Vec<T>>) -> Vec<usize> {
-    vec.iter().map(|v| v.len()).collect()
-}
 
 #[cfg(test)]
 mod tests {
-    use std::convert;
 
     use super::*;
     #[test]
