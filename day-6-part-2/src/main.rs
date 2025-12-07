@@ -36,7 +36,6 @@ impl Calculation {
     }
 }
 
-
 fn main() {
     let input_path = "./input_short.txt";
     let input = std::fs::read_to_string(input_path).expect("Failed to read input file");
@@ -49,7 +48,7 @@ fn main() {
     for line in input.lines() {
         println!("{line}");
         // if lines contains values
-        if !line.contains('+') && !line.contains('*') {            
+        if !line.contains('+') && !line.contains('*') {
             values_vec.push(line);
             values_line_count += 1;
         } else {
@@ -58,22 +57,63 @@ fn main() {
         }
     }
 
-     println!(
+    println!(
         "Found {} values lines and {} operators lines",
         values_line_count, operators_line_count
     );
-    
+
+    let col_indices = get_col_indices(operators_vec[0]);
+    println!("Indices: {:?}", col_indices);
 }
 
+#[derive(Debug, PartialEq, Eq)]
+struct ColIndex {
+    start: usize,
+    end: usize,
+}
 
-fn get_col_indices(line: &str) -> Vec<usize> {
+fn get_col_indices(line: &str) -> Vec<ColIndex> {
     let mut col_indices: Vec<usize> = Vec::new();
     for (idx, character) in line.char_indices() {
         if character == '+' || character == '*' {
             col_indices.push(idx);
         }
     }
-    col_indices
+    let mut output: Vec<ColIndex> = Vec::new();
+    let mut start_idx = col_indices[0];
+    for x in col_indices.iter().skip(1) {
+        let end_idx = x - 1;
+        output.push(ColIndex {
+            start: start_idx,
+            end: end_idx,
+        });
+        start_idx = *x;
+    }
+    output
+}
+
+fn process_colwise(input: Vec<String>, operators_vec: String, col_indices: Vec<ColIndex>) -> Vec<Vec<u32>> {
+    let mut output: Vec<Vec<u32>> = Vec::new();
+
+    for idx in col_indices.iter() {
+        let col_start = idx.start;
+        let col_end = idx.end;
+        for col in col_end..col_start {
+            
+        }
+    }
+
+    output
+}
+
+fn get_column(input: &Vec<String>, col: usize) -> Vec<char> {
+    let mut output: Vec<char> = Vec::new();
+    for line in input {
+        if let Some(ch) = line.chars().nth(col) {
+            output.push(ch);
+        }
+    }
+    output
 }
 
 fn process_values_line(line: &str) -> Vec<u32> {
@@ -117,7 +157,18 @@ mod tests {
     fn test_get_col_indices() {
         let line = "*   +   *   +  ";
         let indices = get_col_indices(line);
-        let expected = vec![0, 4, 8, 12];
+        let expected = vec![
+            ColIndex { start: 0, end: 3 },
+            ColIndex { start: 4, end: 7 },
+            ColIndex { start: 8, end: 11 },
+        ];
         assert_eq!(indices, expected);
+    }
+    #[test]
+    fn test_get_column() {
+        let lines = vec!["123".to_string(), " 45".to_string(), "  6".to_string()];
+        assert_eq!(get_column(&lines, 0), vec!['1', ' ', ' ']);
+        assert_eq!(get_column(&lines, 1), vec!['2', '4', ' ']);
+        assert_eq!(get_column(&lines, 2), vec!['3', '5', '6']);
     }
 }
