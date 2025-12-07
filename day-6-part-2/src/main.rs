@@ -17,6 +17,7 @@ impl Operator {
     }
 }
 
+#[derive(Debug)]
 struct Calculation {
     values: Vec<u32>,
     operator: Operator,
@@ -37,7 +38,7 @@ impl Calculation {
 }
 
 fn main() {
-    let input_path = "./input_short.txt";
+    let input_path = "./input.txt";
     let input = std::fs::read_to_string(input_path).expect("Failed to read input file");
 
     let mut values_vec: Vec<&str> = Vec::new();
@@ -64,6 +65,19 @@ fn main() {
 
     let col_indices = get_col_indices(operators_vec[0]);
     println!("Indices: {:?}", col_indices);
+
+    let processed = process_colwise(values_vec.iter().map(|s| s.to_string()).collect(), operators_vec[0].to_string(), col_indices);
+
+    println!("processed {:?}", processed);
+
+    let mut answers: Vec<u128> = Vec::new();
+    for calc in processed.iter() {
+        answers.push(calc.calculate());
+    }
+
+    //sum answers
+    let total_answer: u128 = answers.iter().sum();
+    println!("total: {total_answer}");
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -71,6 +85,7 @@ struct ColIndex {
     start: usize,
     end: usize,
 }
+
 
 fn get_col_indices(line: &str) -> Vec<ColIndex> {
     let mut col_indices: Vec<usize> = Vec::new();
@@ -80,27 +95,41 @@ fn get_col_indices(line: &str) -> Vec<ColIndex> {
         }
     }
     let mut output: Vec<ColIndex> = Vec::new();
-    let mut start_idx = col_indices[0];
-    for x in col_indices.iter().skip(1) {
-        let end_idx = x - 1;
-        output.push(ColIndex {
-            start: start_idx,
-            end: end_idx,
-        });
-        start_idx = *x;
+    let default_end = line.len();
+    
+    for (idx, &idx_value) in col_indices.iter().enumerate() {
+        let col_start = idx_value;
+        let col_end = col_indices.get(idx + 1).unwrap_or(&default_end) - 1;
+        let col_index = ColIndex {
+            start: col_start,
+            end: col_end
+        };
+        output.push(col_index);
     }
+
     output
 }
 
-fn process_colwise(input: Vec<String>, operators_vec: String, col_indices: Vec<ColIndex>) -> Vec<Vec<u32>> {
-    let mut output: Vec<Vec<u32>> = Vec::new();
+fn process_colwise(input: Vec<String>, operators_vec: String, col_indices: Vec<ColIndex>) -> Vec<Calculation> {
+    let mut output: Vec<Calculation> = Vec::new();
+    let operators = process_operator_line(&operators_vec);
 
-    for idx in col_indices.iter() {
+    for (idx_num, idx) in col_indices.iter().enumerate() {
         let col_start = idx.start;
         let col_end = idx.end;
-        for col in col_end..col_start {
-            
+        let mut values: Vec<u32> = Vec::new();
+        for col in col_start..=col_end {
+            let digits = get_column(&input, col);
+            if let Some(num) = collapse_to_number(digits) {
+                values.push(num);
+            }
         }
+        
+        let calculation = Calculation {
+            values,
+            operator: operators[idx_num].clone()
+        };
+        output.push(calculation);
     }
 
     output
@@ -114,6 +143,17 @@ fn get_column(input: &Vec<String>, col: usize) -> Vec<char> {
         }
     }
     output
+}
+
+fn collapse_to_number(digits: Vec<char>) -> Option<u32> {
+    let digit_string: String = digits
+        .into_iter()
+        .filter(|c| !c.is_whitespace())
+        .collect();
+    if digit_string.is_empty() {
+        return None;
+    }
+    digit_string.parse::<u32>().ok()
 }
 
 fn process_values_line(line: &str) -> Vec<u32> {
@@ -161,6 +201,7 @@ mod tests {
             ColIndex { start: 0, end: 3 },
             ColIndex { start: 4, end: 7 },
             ColIndex { start: 8, end: 11 },
+            ColIndex { start: 12, end: 14 }
         ];
         assert_eq!(indices, expected);
     }
@@ -170,5 +211,11 @@ mod tests {
         assert_eq!(get_column(&lines, 0), vec!['1', ' ', ' ']);
         assert_eq!(get_column(&lines, 1), vec!['2', '4', ' ']);
         assert_eq!(get_column(&lines, 2), vec!['3', '5', '6']);
+    }
+    #[test]
+    fn test_collapse_to_number() {
+        assert_eq!(collapse_to_number(vec!['1', ' ' , '3']), Some(13));
+        assert_eq!(collapse_to_number(vec![' ', ' ' , '3']), Some(3));
+        assert!(collapse_to_number(vec![' ', ' ' , ' ']).is_none());
     }
 }
