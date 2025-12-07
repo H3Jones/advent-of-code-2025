@@ -1,4 +1,3 @@
-
 #[derive(Debug, PartialEq, Eq, Clone)]
 enum Operator {
     Add,
@@ -65,7 +64,11 @@ fn main() {
     let col_indices = get_col_indices(operators_vec[0]);
     println!("Indices: {:?}", col_indices);
 
-    let processed = process_colwise(values_vec.iter().map(|s| s.to_string()).collect(), operators_vec[0].to_string(), col_indices);
+    let processed = process_colwise(
+        values_vec.iter().map(|s| s.to_string()).collect(),
+        operators_vec[0].to_string(),
+        col_indices,
+    );
 
     println!("processed {:?}", processed);
 
@@ -85,7 +88,6 @@ struct ColIndex {
     end: usize,
 }
 
-
 fn get_col_indices(line: &str) -> Vec<ColIndex> {
     let mut col_indices: Vec<usize> = Vec::new();
     for (idx, character) in line.char_indices() {
@@ -95,13 +97,13 @@ fn get_col_indices(line: &str) -> Vec<ColIndex> {
     }
     let mut output: Vec<ColIndex> = Vec::new();
     let default_end = line.len();
-    
+
     for (idx, &idx_value) in col_indices.iter().enumerate() {
         let col_start = idx_value;
         let col_end = col_indices.get(idx + 1).unwrap_or(&default_end) - 1;
         let col_index = ColIndex {
             start: col_start,
-            end: col_end
+            end: col_end,
         };
         output.push(col_index);
     }
@@ -109,7 +111,11 @@ fn get_col_indices(line: &str) -> Vec<ColIndex> {
     output
 }
 
-fn process_colwise(input: Vec<String>, operators_vec: String, col_indices: Vec<ColIndex>) -> Vec<Calculation> {
+fn process_colwise(
+    input: Vec<String>,
+    operators_vec: String,
+    col_indices: Vec<ColIndex>,
+) -> Vec<Calculation> {
     let mut output: Vec<Calculation> = Vec::new();
     let operators = process_operator_line(&operators_vec);
 
@@ -123,10 +129,10 @@ fn process_colwise(input: Vec<String>, operators_vec: String, col_indices: Vec<C
                 values.push(num);
             }
         }
-        
+
         let calculation = Calculation {
             values,
-            operator: operators[idx_num].clone()
+            operator: operators[idx_num].clone(),
         };
         output.push(calculation);
     }
@@ -145,10 +151,7 @@ fn get_column(input: &Vec<String>, col: usize) -> Vec<char> {
 }
 
 fn collapse_to_number(digits: Vec<char>) -> Option<u32> {
-    let digit_string: String = digits
-        .into_iter()
-        .filter(|c| !c.is_whitespace())
-        .collect();
+    let digit_string: String = digits.into_iter().filter(|c| !c.is_whitespace()).collect();
     if digit_string.is_empty() {
         return None;
     }
@@ -200,7 +203,7 @@ mod tests {
             ColIndex { start: 0, end: 3 },
             ColIndex { start: 4, end: 7 },
             ColIndex { start: 8, end: 11 },
-            ColIndex { start: 12, end: 14 }
+            ColIndex { start: 12, end: 14 },
         ];
         assert_eq!(indices, expected);
     }
@@ -213,8 +216,8 @@ mod tests {
     }
     #[test]
     fn test_collapse_to_number() {
-        assert_eq!(collapse_to_number(vec!['1', ' ' , '3']), Some(13));
-        assert_eq!(collapse_to_number(vec![' ', ' ' , '3']), Some(3));
-        assert!(collapse_to_number(vec![' ', ' ' , ' ']).is_none());
+        assert_eq!(collapse_to_number(vec!['1', ' ', '3']), Some(13));
+        assert_eq!(collapse_to_number(vec![' ', ' ', '3']), Some(3));
+        assert!(collapse_to_number(vec![' ', ' ', ' ']).is_none());
     }
 }
