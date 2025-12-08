@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, PartialEq, Eq)]
 struct Position {
@@ -65,7 +65,7 @@ fn main() {
             let pos2 = &boxes[j];
             let distance = pos1.position.distance_to(&pos2.position);
             let dist = Distance {
-                ids: (i as u32, j as u32),
+                ids: (i as u32 + 1, j as u32 + 1),
                 value: distance,
             };
             distances.push(dist);
@@ -75,7 +75,58 @@ fn main() {
     // Sot by distance
     distances.sort_by_key(|dist| dist.value);
 
-    println!("distances: {:?}", distances);
+    //Get top 10
+    distances.truncate(11);
+
+    println!("top ten distances: {:?}", distances);
+
+    let mut results: Vec<HashSet<u32>>= Vec::new();
+    let mut visited: HashSet<IdPair> = HashSet::new();
+
+    for dist in distances.iter() {
+
+        let ids = dist.ids;
+
+        if visited.contains(&ids) {
+            continue;
+        }
+
+        let mut set: HashSet<u32> = HashSet::new();
+        //insert ids
+       
+        set.insert(ids.0);
+        set.insert(ids.1);
+        for second_dist in distances.iter() {
+            let second_ids = second_dist.ids;
+            if set.contains(&second_ids.0) || set.contains(&second_ids.1) {
+                set.insert(second_ids.0);
+                set.insert(second_ids.1);
+                visited.insert(second_ids);
+            }
+            
+        }
+        println!("Current set: {:?}",set);
+        results.push(set);
+    };
+    println!("{:?}", results);
+
+    //answer is product of lens
+    let mut totals: Vec<u32> = results.iter().map(|set| set.len() as u32).collect();
+    totals.sort();
+    totals.reverse();
+    println!("totals: {:?}", totals);
+    totals.truncate(3);
+    let total: u32 = totals.iter().product();
+    println!("Total: {total}");
+}
+
+type IdPair = (u32, u32);
+
+fn id_match(a: IdPair, b: IdPair) -> bool {
+    // Check if the first element either element of b
+    (a.0 == b.0) || (a.0 == b.1) ||
+    // Check if the second element matches either element of b
+    (a.1 == b.0) || (a.1 == b.1)
 }
 
 #[cfg(test)]
@@ -97,5 +148,10 @@ mod tests {
         let position2 = Position { x: 4, y: 4, z: 4 };
         let distance = position1.distance_to(&position2);
         assert_eq!(distance, 48);
+    }
+    #[test]
+    fn test_id_match() {
+        assert!(id_match((0, 5), (1, 5)));
+        assert_ne!((0, 5), (10, 11));
     }
 }
