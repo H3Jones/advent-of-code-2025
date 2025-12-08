@@ -22,10 +22,10 @@ impl Position {
     }
 
     // Leave unrooted so we dont worry about floats
-    fn distance_to(&self, other: &Position) -> i32 {
-        let dx = self.x.abs_diff(other.x) as i32;
-        let dy = self.y.abs_diff(other.y) as i32;
-        let dz = self.z.abs_diff(other.z) as i32;
+    fn distance_to(&self, other: &Position) -> i64 {
+        let dx = self.x.abs_diff(other.x) as i64;
+        let dy = self.y.abs_diff(other.y) as i64;
+        let dz = self.z.abs_diff(other.z) as i64;
 
         dx * dx + dy * dy + dz * dz
     }
@@ -40,11 +40,11 @@ struct JunctionBox {
 #[derive(Debug)]
 struct Distance {
     ids: (u32, u32),
-    value: i32,
+    value: i64,
 }
 
 fn main() {
-    let input_path = "./input_short.txt";
+    let input_path = "./input.txt";
     let input = std::fs::read_to_string(input_path).expect("Failed to read input file");
 
     let mut boxes: Vec<JunctionBox> = Vec::new();
@@ -76,47 +76,66 @@ fn main() {
     distances.sort_by_key(|dist| dist.value);
 
     //Get top 10
-    distances.truncate(11);
+    distances.truncate(1000);
 
     println!("top ten distances: {:?}", distances);
 
-    let mut results: Vec<HashSet<u32>>= Vec::new();
-    let mut visited: HashSet<IdPair> = HashSet::new();
+    let mut results: Vec<HashSet<u32>> = Vec::new();
+    let mut visited: HashSet<u32> = HashSet::new();
 
     for dist in distances.iter() {
+        let (id_a, id_b): (u32, u32) = dist.ids;
 
-        let ids = dist.ids;
-
-        if visited.contains(&ids) {
+        // If we have visited both continue
+        if visited.contains(&id_a) && visited.contains(&id_b) {
             continue;
         }
 
         let mut set: HashSet<u32> = HashSet::new();
+        
         //insert ids
-       
-        set.insert(ids.0);
-        set.insert(ids.1);
-        for second_dist in distances.iter() {
-            let second_ids = second_dist.ids;
-            if set.contains(&second_ids.0) || set.contains(&second_ids.1) {
-                set.insert(second_ids.0);
-                set.insert(second_ids.1);
-                visited.insert(second_ids);
+        set.insert(id_a);
+        set.insert(id_b);
+
+        let mut new_match_found = true;
+
+        //Recurse to ensure we capture all possible variants
+        while new_match_found {
+
+            new_match_found = false;
+
+            for second_dist in distances.iter() {
+                let (second_a, second_b) = second_dist.ids;
+
+                if set.contains(&second_a) || set.contains(&second_b) {
+                    if set.insert(second_a) {
+                        new_match_found = true;
+                    }
+                    if set.insert(second_b) {
+                        new_match_found = true;
+                    }
+                }
             }
-            
         }
-        println!("Current set: {:?}",set);
-        results.push(set);
-    };
+
+        // Once we have exhausted our search
+        if !set.is_empty() {
+            for id in set.iter() {
+                visited.insert(*id);
+            }
+            results.push(set);
+        };
+    }
+
     println!("{:?}", results);
 
     //answer is product of lens
-    let mut totals: Vec<u32> = results.iter().map(|set| set.len() as u32).collect();
+    let mut totals: Vec<u128> = results.iter().map(|set| set.len() as u128).collect();
     totals.sort();
     totals.reverse();
     println!("totals: {:?}", totals);
     totals.truncate(3);
-    let total: u32 = totals.iter().product();
+    let total: u128 = totals.iter().product();
     println!("Total: {total}");
 }
 
