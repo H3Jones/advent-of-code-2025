@@ -21,12 +21,13 @@ impl Position {
         }
     }
 
-    fn distance_to(&self, other: &Position) -> f32 {
-        let dx = self.x.abs_diff(other.x) as f64;
-        let dy = self.y.abs_diff(other.y) as f64;
-        let dz = self.z.abs_diff(other.z) as f64;
+    // Leave unrooted so we dont worry about floats
+    fn distance_to(&self, other: &Position) -> i32 {
+        let dx = self.x.abs_diff(other.x) as i32;
+        let dy = self.y.abs_diff(other.y) as i32;
+        let dz = self.z.abs_diff(other.z) as i32;
 
-        (dx * dx + dy * dy + dz * dz).sqrt() as f32
+        dx * dx + dy * dy + dz * dz
     }
 }
 
@@ -39,7 +40,7 @@ struct JunctionBox {
 #[derive(Debug)]
 struct Distance {
     ids: (u32, u32),
-    value: f32,
+    value: i32,
 }
 
 fn main() {
@@ -55,17 +56,24 @@ fn main() {
         });
     }
 
-    println!("Boxes {:?}", boxes);
+    //println!("Boxes {:?}", boxes);
 
-    let mut distances: HashMap<(u32, u32), f32> = HashMap::new();
+    let mut distances: Vec<Distance> = Vec::new();
     for i in 0..boxes.len() {
         for j in (i + 1)..boxes.len() {
             let pos1 = &boxes[i];
             let pos2 = &boxes[j];
             let distance = pos1.position.distance_to(&pos2.position);
-            distances.insert((i as u32, j as u32), distance);
+            let dist = Distance {
+                ids: (i as u32, j as u32),
+                value: distance,
+            };
+            distances.push(dist);
         }
     }
+
+    // Sot by distance
+    distances.sort_by_key(|dist| dist.value);
 
     println!("distances: {:?}", distances);
 }
@@ -88,6 +96,6 @@ mod tests {
         let position1 = Position { x: 0, y: 0, z: 0 };
         let position2 = Position { x: 4, y: 4, z: 4 };
         let distance = position1.distance_to(&position2);
-        assert_eq!(distance.round(), 7.0);
+        assert_eq!(distance, 48);
     }
 }
