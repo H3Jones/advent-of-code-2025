@@ -1,4 +1,6 @@
-#[derive(Debug, PartialEq, Clone)]
+use std::collections::HashSet;
+
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 struct Position {
     x: u32,
     y: u32,
@@ -71,7 +73,7 @@ impl Position {
                 output.push(Position { x: x, y: *y });
             }
 
-             if reversed {
+            if reversed {
                 output.reverse();
             };
         };
@@ -86,13 +88,28 @@ struct Rectangle {
     area: i64,
 }
 
-fn fill_in_tiles(red_tiles: &Vec<Position>) {
-    for (idx, tile) in red_tiles.iter().enumerate().skip(1) {
+fn fill_in_tiles(red_tiles: &Vec<Position>) -> HashSet<Position> {
+    let mut set: HashSet<Position> = HashSet::new();
+    for (idx, _tile) in red_tiles.iter().enumerate().skip(1) {
         let tile1 = &red_tiles[idx - 1];
         let tile2 = &red_tiles[idx];
 
-        //check if tiles in are same row or same column
+        let filled_in = tile1.tile_to_inclusive(tile2);
+        for tile in filled_in.iter() {
+            set.insert(tile.clone());
+        }
     }
+    // last tile wraps round
+    let last_tile = &red_tiles.last().unwrap();
+    let first_tile = &red_tiles.first().unwrap();
+
+    let filled_in = last_tile.tile_to_inclusive(first_tile);
+
+    for tile in filled_in.iter() {
+        set.insert(tile.clone());
+    }
+
+    set
 }
 
 fn main() {
@@ -105,32 +122,34 @@ fn main() {
         tiles.push(position);
     }
 
-    //println!("Tiles {:?}", tiles);
+    let outer_set = fill_in_tiles(&tiles);
 
-    let mut rectangles: Vec<Rectangle> = Vec::new();
-    for i in 0..tiles.len() {
-        for j in (i + 1)..tiles.len() {
-            let pos1 = &tiles[i];
-            let pos2 = &tiles[j];
-            let area = pos1.find_area(&pos2);
-            let dist = Rectangle {
-                position1: pos1.clone(),
-                position2: pos2.clone(),
-                area: area,
-            };
-            rectangles.push(dist);
-        }
-    }
+    println!("Outer Tiles {:?}", outer_set);
 
-    //println!("rectangles {:?}", &rectangles);
+    // let mut rectangles: Vec<Rectangle> = Vec::new();
+    // for i in 0..tiles.len() {
+    //     for j in (i + 1)..tiles.len() {
+    //         let pos1 = &tiles[i];
+    //         let pos2 = &tiles[j];
+    //         let area = pos1.find_area(&pos2);
+    //         let dist = Rectangle {
+    //             position1: pos1.clone(),
+    //             position2: pos2.clone(),
+    //             area: area,
+    //         };
+    //         rectangles.push(dist);
+    //     }
+    // }
 
-    // Sot by area
-    rectangles.sort_by_key(|rect| rect.area);
-    rectangles.reverse();
-    rectangles.truncate(1);
+    // //println!("rectangles {:?}", &rectangles);
 
-    //list top
-    println!("top rectangles: {:?}", rectangles);
+    // // Sot by area
+    // rectangles.sort_by_key(|rect| rect.area);
+    // rectangles.reverse();
+    // rectangles.truncate(1);
+
+    // //list top
+    // println!("top rectangles: {:?}", rectangles);
 }
 
 #[cfg(test)]
