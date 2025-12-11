@@ -209,33 +209,67 @@ fn check_point_is_inside(
     //ray casting
     let max_x = bounds.max_x.expect("Should be populated!") + 1;
 
-    let mut crossed_boundary = 0;
+    let mut crossings = 0;
 
-    for x_coord in position.x..=max_x {
-        let temp_position = Position {
-            x: x_coord,
-            y: position.y,
-        };
-        //check if we hit the boundary
-        if outer_set.contains(&temp_position) {
-            crossed_boundary += 1;
+    let mut x = position.x;
+
+    while x <= max_x {
+        let test = Position { x, y: position.y };
+
+        // Crossing logic: Count *only when transitioning from empty → boundary*
+        if outer_set.contains(&test) {
+            // skip over horizontal segments
+            let mut x2 = x + 1;
+            while x2 <= max_x {
+                let next = Position {
+                    x: x2,
+                    y: position.y,
+                };
+                if !outer_set.contains(&next) {
+                    break;
+                }
+                x2 += 1;
+            }
+
+            crossings += 1;
+            x = x2; // jump over horizontal segment
+        } else {
+            x += 1;
         }
     }
-    crossed_boundary % 2 != 0
+
+    crossings % 2 == 1
 }
 
 fn check_rectangle_is_inside(
     rectangle: &Rectangle,
     bounds: &Bounds,
     outer_set: &HashSet<Position>,
+    valid_set: &mut HashSet<Position>,
+    invalid_set: &mut HashSet<Position>,
 ) -> bool {
     //ray casting
     let positions = rectangle.get_positions(false);
-    //println!("Postions: {:?}", positions);
+    // println!("");
+    // println!("Postions: {:?}", positions);
+    // println!("");
     for position in positions {
-        let result = check_point_is_inside(&position, bounds, outer_set);
-        if !result {
+        if valid_set.contains(&position) {
+            continue;
+        }
+        if invalid_set.contains(&position) {
             return false;
+        }
+
+        let result = check_point_is_inside(&position, bounds, &outer_set);
+
+        if !result {
+            //println!("position is invalid: {:?}", position);
+            invalid_set.insert(position);
+            return false;
+        } else {
+            //println!("position is valid: {:?}", position);
+            valid_set.insert(position);
         }
     }
     true
@@ -280,8 +314,17 @@ fn main() {
     rectangles.sort_by_key(|rect| rect.area);
     rectangles.reverse();
 
+    let mut valid_set = outer_set.clone();
+    let mut invalid_set: HashSet<Position> = HashSet::new();
+
     for rectangle in rectangles.iter() {
-        if check_rectangle_is_inside(rectangle, &outer_bounds, &outer_set) {
+        if check_rectangle_is_inside(
+            rectangle,
+            &outer_bounds,
+            &outer_set,
+            &mut valid_set,
+            &mut invalid_set,
+        ) {
             println!("Found valid rectangle: {:?}", rectangle);
             break;
         } else {
