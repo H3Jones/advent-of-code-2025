@@ -88,6 +88,50 @@ struct Rectangle {
     area: i64,
 }
 
+impl Rectangle {
+    fn get_positions(&self, corners_only: bool) -> Vec<Position> {
+        let min_x = self.position1.x.min(self.position2.x);
+        let max_x = self.position1.x.max(self.position2.x);
+        let min_y = self.position1.y.min(self.position2.y);
+        let max_y = self.position1.y.max(self.position2.y);
+
+        let mut points: Vec<Position> = Vec::new();
+
+        if corners_only {
+            points.push(Position { x: min_x, y: min_y });
+            points.push(Position { x: max_x, y: min_y });
+            points.push(Position { x: min_x, y: max_y });
+            points.push(Position { x: max_x, y: max_y });
+
+            return points;
+        } else {
+            //Top Edge (min_y): x goes from min_x to max_x
+            for x in min_x..=max_x {
+                points.push(Position { x, y: min_y });
+            }
+
+            // Bottom Edge (max_y): x goes from min_x to max_x
+            for x in min_x..=max_x {
+                points.push(Position { x, y: max_y });
+            }
+
+            // Left Edge (min_x): y goes from min_y to max_y
+            for y in min_y..=max_y {
+                points.push(Position { x: min_x, y });
+            }
+
+            //Right Edge (max_x): y goes from min_y to max_y
+            for y in min_y..=max_y {
+                points.push(Position { x: max_x, y });
+            }
+
+            //Remove duplicated
+            let unique_points: HashSet<Position> = points.into_iter().collect();
+            return unique_points.into_iter().collect();
+        }
+    }
+}
+
 fn fill_in_tiles(red_tiles: &Vec<Position>) -> HashSet<Position> {
     let mut set: HashSet<Position> = HashSet::new();
     for (idx, _tile) in red_tiles.iter().enumerate().skip(1) {
@@ -153,8 +197,52 @@ impl Bounds {
     }
 }
 
+fn check_point_is_inside(
+    position: &Position,
+    bounds: &Bounds,
+    outer_set: &HashSet<Position>,
+) -> bool {
+    //early check if already on boundary then must be inside
+    if outer_set.contains(position) {
+        return true;
+    }
+    //ray casting
+    let max_x = bounds.max_x.expect("Should be populated!") + 1;
+
+    let mut crossed_boundary = 0;
+
+    for x_coord in position.x..=max_x {
+        let temp_position = Position {
+            x: x_coord,
+            y: position.y,
+        };
+        //check if we hit the boundary
+        if outer_set.contains(&temp_position) {
+            crossed_boundary += 1;
+        }
+    }
+    crossed_boundary % 2 != 0
+}
+
+fn check_rectangle_is_inside(
+    rectangle: &Rectangle,
+    bounds: &Bounds,
+    outer_set: &HashSet<Position>,
+) -> bool {
+    //ray casting
+    let positions = rectangle.get_positions(false);
+    //println!("Postions: {:?}", positions);
+    for position in positions {
+        let result = check_point_is_inside(&position, bounds, outer_set);
+        if !result {
+            return false;
+        }
+    }
+    true
+}
+
 fn main() {
-    let input_path = "./input_short.txt";
+    let input_path = "./input.txt";
     let input = std::fs::read_to_string(input_path).expect("Failed to read input file");
 
     let mut tiles: Vec<Position> = Vec::new();
@@ -165,11 +253,11 @@ fn main() {
         tiles.push(position);
     }
 
-    println!("Outer Bounds: {:?}", outer_bounds);
+    //println!("Outer Bounds: {:?}", outer_bounds);
 
     let outer_set = fill_in_tiles(&tiles);
 
-    println!("Outer Tiles {:?}", outer_set);
+    //println!("Outer Tiles {:?}", outer_set);
 
     let mut rectangles: Vec<Rectangle> = Vec::new();
     for i in 0..tiles.len() {
@@ -188,10 +276,18 @@ fn main() {
 
     // //println!("rectangles {:?}", &rectangles);
 
-    // // Sot by area
-    // rectangles.sort_by_key(|rect| rect.area);
-    // rectangles.reverse();
-    // rectangles.truncate(1);
+    // Sot by area
+    rectangles.sort_by_key(|rect| rect.area);
+    rectangles.reverse();
+
+    for rectangle in rectangles.iter() {
+        if check_rectangle_is_inside(rectangle, &outer_bounds, &outer_set) {
+            println!("Found valid rectangle: {:?}", rectangle);
+            break;
+        } else {
+            println!("Rejected: {:?}", rectangle);
+        }
+    }
 
     // //list top
     // println!("top rectangles: {:?}", rectangles);
