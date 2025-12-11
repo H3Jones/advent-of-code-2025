@@ -112,34 +112,79 @@ fn fill_in_tiles(red_tiles: &Vec<Position>) -> HashSet<Position> {
     set
 }
 
+#[derive(Debug)]
+struct Bounds {
+    min_x: Option<u32>,
+    max_x: Option<u32>,
+    min_y: Option<u32>,
+    max_y: Option<u32>,
+}
+
+impl Bounds {
+    fn new() -> Self {
+        Self {
+            min_x: None,
+            max_x: None,
+            min_y: None,
+            max_y: None,
+        }
+    }
+
+    fn update(&mut self, position: &Position) {
+        self.min_x = match self.min_x {
+            Some(current_min) => Some(current_min.min(position.x)),
+            None => Some(position.x),
+        };
+
+        self.max_x = match self.max_x {
+            Some(current_max) => Some(current_max.max(position.x)),
+            None => Some(position.x),
+        };
+
+        self.min_y = match self.min_y {
+            Some(current_min) => Some(current_min.min(position.y)),
+            None => Some(position.y),
+        };
+
+        self.max_y = match self.max_y {
+            Some(current_max) => Some(current_max.max(position.y)),
+            None => Some(position.y),
+        };
+    }
+}
+
 fn main() {
     let input_path = "./input_short.txt";
     let input = std::fs::read_to_string(input_path).expect("Failed to read input file");
 
     let mut tiles: Vec<Position> = Vec::new();
+    let mut outer_bounds: Bounds = Bounds::new();
     for (id, line) in input.lines().enumerate() {
         let position = Position::from_str(line);
+        outer_bounds.update(&position);
         tiles.push(position);
     }
+
+    println!("Outer Bounds: {:?}", outer_bounds);
 
     let outer_set = fill_in_tiles(&tiles);
 
     println!("Outer Tiles {:?}", outer_set);
 
-    // let mut rectangles: Vec<Rectangle> = Vec::new();
-    // for i in 0..tiles.len() {
-    //     for j in (i + 1)..tiles.len() {
-    //         let pos1 = &tiles[i];
-    //         let pos2 = &tiles[j];
-    //         let area = pos1.find_area(&pos2);
-    //         let dist = Rectangle {
-    //             position1: pos1.clone(),
-    //             position2: pos2.clone(),
-    //             area: area,
-    //         };
-    //         rectangles.push(dist);
-    //     }
-    // }
+    let mut rectangles: Vec<Rectangle> = Vec::new();
+    for i in 0..tiles.len() {
+        for j in (i + 1)..tiles.len() {
+            let pos1 = &tiles[i];
+            let pos2 = &tiles[j];
+            let area = pos1.find_area(&pos2);
+            let dist = Rectangle {
+                position1: pos1.clone(),
+                position2: pos2.clone(),
+                area: area,
+            };
+            rectangles.push(dist);
+        }
+    }
 
     // //println!("rectangles {:?}", &rectangles);
 
